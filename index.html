@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Tour Planning System</title>
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
+  <style>
+    body { font-family: Arial; margin: 0; padding: 0; }
+    #map { height: 400px; width: 100%; }
+    .container { padding: 15px; }
+    input, select, button { margin: 5px; padding: 8px; }
+    #plan { background: #f4f4f4; padding: 10px; margin-top: 10px; }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>🌍 Smart Tour Planning System</h2>
+
+  <input id="location" placeholder="Enter city">
+
+  <select id="interest">
+    <option value="tourist attractions">Tourist Attractions</option>
+    <option value="temples">Temples</option>
+    <option value="restaurants">Food</option>
+  </select>
+
+  <select id="days">
+    <option value="1">1 Day</option>
+    <option value="2">2 Days</option>
+    <option value="3">3 Days</option>
+  </select>
+
+  <button onclick="planTour()">Generate Plan</button>
+
+  <div id="plan"></div>
+</div>
+
+<div id="map"></div>
+
+<script>
+let map;
+
+function initMap(lat = 21.1458, lng = 79.0882) {
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: lat, lng: lng },
+    zoom: 12
+  });
+}
+
+function planTour() {
+  let location = document.getElementById("location").value;
+  let interest = document.getElementById("interest").value;
+  let days = document.getElementById("days").value;
+
+  let geocoder = new google.maps.Geocoder();
+
+  geocoder.geocode({ address: location }, function(results, status) {
+    if (status === "OK") {
+      map.setCenter(results[0].geometry.location);
+
+      let service = new google.maps.places.PlacesService(map);
+
+      let request = {
+        location: results[0].geometry.location,
+        radius: '5000',
+        query: interest
+      };
+
+      service.textSearch(request, function(results, status) {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+
+          map = new google.maps.Map(document.getElementById("map"), {
+            center: results[0].geometry.location,
+            zoom: 13
+          });
+
+          results.slice(0,5).forEach(place => {
+            new google.maps.Marker({
+              map: map,
+              position: place.geometry.location
+            });
+          });
+
+          generatePlan(days, results);
+        }
+      });
+    } else {
+      alert("Location not found");
+    }
+  });
+}
+
+function generatePlan(days, places) {
+  let output = "<h3>🧠 Generated Travel Plan</h3>";
+
+  if(days == 1){
+    output += "Day 1: Visit " + places[0].name + ", " + places[1].name;
+  }
+  else if(days == 2){
+    output += "Day 1: " + places[0].name + ", " + places[1].name + "<br>";
+    output += "Day 2: " + places[2].name + ", " + places[3].name;
+  }
+  else{
+    output += "Day 1: " + places[0].name + "<br>";
+    output += "Day 2: " + places[1].name + ", " + places[2].name + "<br>";
+    output += "Day 3: " + places[3].name + ", " + places[4].name;
+  }
+
+  document.getElementById("plan").innerHTML = output;
+}
+
+initMap();
+</script>
+
+</body>
+</html>
